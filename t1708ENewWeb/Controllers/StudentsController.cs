@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ namespace t1708ENewWeb.Controllers
         public StudentsController(t1708ENewWebContext context)
         {
             _context = context;
+         
 
         }
 
@@ -135,19 +137,52 @@ namespace t1708ENewWeb.Controllers
         }
 
         // POST: Students/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
-        {
-            var student = await _context.Student.FindAsync(id);
-            _context.Student.Remove(student);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+        //[HttpPost, ActionName("Delete")]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> DeleteConfirmed(string id)
+        //{
+        //    var student = await _context.Student.FindAsync(id);
+        //    _context.Student.Remove(student);
+        //    await _context.SaveChangesAsync();
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         private bool StudentExists(string id)
         {
             return _context.Student.Any(e => e.RollNumber == id);
+        }
+        [HttpPost]
+        public IActionResult Del(string id)
+        {
+            var exisProduct = _context.Student.Find(id);
+            if (exisProduct == null)
+            {
+                return NotFound();
+            }
+
+
+            _context.Student.Remove(exisProduct);
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(Index));
+        }
+        public IActionResult DeleteMany(string ids)
+        {
+            var num = ids.Split(",").Length;
+
+            foreach (var id in ids.Split(","))
+            {
+                var exisStudents = _context.Student.Find(id);
+                if (exisStudents == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Student.Remove(exisStudents ?? throw new InvalidAsynchronousStateException());
+            }
+
+            _context.SaveChanges();
+            return RedirectToAction(nameof(Index));
         }
     }
 }

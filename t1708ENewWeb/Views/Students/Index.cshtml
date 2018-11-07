@@ -5,37 +5,45 @@
 }
 
 <h2>Index</h2>
-
+<div class="alert-success"></div>
+<div class="alert-error"></div>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
 <table class="table">
     <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.FirstName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LastName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreateAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdateAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th></th>
-        </tr>
+    <tr>
+        <th>
+            <input type="checkbox" id="check-all" />
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.LastName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Email)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CreateAt)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.UpdateAt)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Status)
+        </th>
+        <th></th>
+    </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+    @foreach (var item in Model)
+    {
         <tr>
+            <td>
+                <input type="checkbox" class="check-item" id="check-id-@item.RollNumber" />
+            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.FirstName)
             </td>
@@ -57,9 +65,89 @@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.RollNumber">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.RollNumber">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.RollNumber">Delete</a>
+                <a asp-action="Delete" asp-route-id="@item.RollNumber" class="bthDelete">Delete</a>
+                <input type="button" class="bthDelete" id="@item.RollNumber" value="Delete" />
             </td>
         </tr>
-}
+    }
+    
     </tbody>
+    <tr>
+        <td>
+            <input type="button"  id="delete-all" value="Delete all" />
+        </td>
+    </tr>
+    </tfoot>
 </table>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script>
+    $(Document).ready(function () {
+        $(".bthDelete").click(function () {
+            var currentBtn = $(this);
+            if (confirm("do you want to delete product")) {
+                $.ajax({
+                    url: "/Students/Del?id=" + currentBtn.attr("id"),
+                    type: "POST",
+                    success: function () {
+                        $(".alert-success").text("delete success");
+                        currentBtn.closest('tr').remove();
+                    },
+                    error: function () {
+                        $(".alert-error").text("delete fail");
+                    }
+                });
+            }
+        });
+    })
+
+    var listBtnDelete = document.getElementsByClassName("btn-delete");
+    for (var i = 0; i < listBtnDelete.length; i++) {
+        listBtnDelete[i].onclick = function () {
+
+            if (confirm("Are you sure ?")) {
+                var currentDeleteButton = this;
+                var deleteId = this.id;
+                var xmlHttpRequest = new XMLHttpRequest();
+                xmlHttpRequest.onreadystatechange = function () {
+                    if (this.readyState === 4 && this.status === 200) {
+                        alert("Delete success");
+                        currentDeleteButton.parentElement.remove();
+                    }
+                }
+                xmlHttpRequest.open("POST", "/Students/Delete?ids=" + deleteId, true);
+                xmlHttpRequest.send();
+            }
+        };
+    }
+
+    var checkAll = document.getElementById("check-all");
+    var listCheckbox = document.getElementsByClassName("check-item");
+    checkAll.onclick = function () {
+        for (var i = 0; i < listCheckbox.length; i++) {
+            listCheckbox[i].checked = this.checked;
+        }
+    }
+    var deleteAll = document.getElementById("delete-all");
+    deleteAll.onclick = function () {
+        var checkedItems = document.querySelectorAll(".check-item:checked");
+        var deleteIds = new Array();
+        for (var i = 0; i < checkedItems.length; i++) {
+            deleteIds.push(checkedItems[i].id.replace("check-id-", ""));
+        }
+        console.log(deleteIds);
+        if (deleteIds.length === 0) {
+            alert("Please choose at least 1 item.");
+            return;
+        }
+        // call ajax.
+        var xmlHttpRequest = new XMLHttpRequest();
+        xmlHttpRequest.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                alert("Delete success");
+                location.reload();
+            }
+        }
+        xmlHttpRequest.open("POST", "/Students/DeleteMany?ids=" + deleteIds, true);
+        xmlHttpRequest.send();
+     }
+</script>
